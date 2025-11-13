@@ -4,8 +4,6 @@ import TaskList from './components/TaskList';
 import NewTask from './components/NewTask';
 
 const TASKS_URL = "/tasks";
-const USER_URL = "/users";
-const AUTH_URL = "/auth";
 
 function App() {
   const [tasks, setTasks] = useState([]);
