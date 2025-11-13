@@ -1,6 +1,7 @@
 # Kubernetes Microservices Demo
 
 A simple microservices application demonstrating Kubernetes deployment, service discovery, and ingress routing using a task management system.
+And also CI/CD with Github Actions
 
 ## 📋 Project Overview
 
@@ -182,11 +183,6 @@ The ingress uses path-based routing with rewrite rules:
 /*         → frontend-service:80
 ```
 
-**Important**: Due to the ingress rewrite configuration, API requests follow this pattern:
-- Frontend requests: `/tasks/tasks`
-- Ingress rewrites to: `/tasks`
-- Backend receives: `/tasks`
-
 ## 🔐 Authentication Flow
 
 1. Frontend sends request with Bearer token in Authorization header
@@ -264,19 +260,159 @@ The frontend is a static React build served by Nginx:
 - Built files are copied to `/usr/share/nginx/html`
 - Nginx configuration handles React Router routing
 - API calls are proxied through ingress
+  
+## 🚀 CI/CD Pipeline (GitHub Actions)
 
-## 🚧 Future Improvements
+This project includes a fully automated **CI/CD pipeline** built with **GitHub Actions**.  
+It performs:
 
-- [ ] Add persistent volume for task storage
-- [ ] Implement real database (PostgreSQL/MongoDB)
-- [ ] Add proper JWT token generation and validation
-- [ ] Implement user registration and login
-- [ ] Add Horizontal Pod Autoscaling (HPA)
-- [ ] Implement health checks and readiness probes
-- [ ] Add monitoring with Prometheus and Grafana
-- [ ] Use Helm charts for deployment
-- [ ] Add CI/CD pipeline
-- [ ] Implement proper logging (ELK stack)
+- Building & testing all microservices  
+- Building the React frontend  
+- Packaging all services into Docker images  
+- Pushing images to Docker Hub  
+- (Optional) Deploying to Minikube for testing  
+
+---
+
+## 🔄 Workflow Overview
+
+The workflow file is located at:
+
+```
+.github/workflows/ci-cd.yml
+```
+
+It triggers on:
+
+```yaml
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master ]
+```
+
+---
+
+## 🧱 CI Stages
+
+The pipeline is divided into multiple jobs that run in parallel when possible.
+
+---
+
+### 1️⃣ Frontend Build & Test
+
+This job:
+
+- Installs Node.js  
+- Installs dependencies (`npm ci`)  
+- Runs tests  
+- Builds the React production bundle  
+- Uploads the build output as an artifact  
+
+This ensures the frontend builds cleanly before Docker packaging.
+
+---
+
+### 2️⃣ Backend Service Build & Test
+
+There are three backend services:
+
+- **Auth API**
+- **Users API**
+- **Tasks API**
+
+Each one:
+
+- Checks out the code  
+- Installs dependencies  
+- Runs optional tests  
+
+This validates all services before creating Docker images.
+
+---
+
+## 🐳 3️⃣ Docker Build & Push (Matrix Strategy)
+
+Once all services pass the build stage, Docker images are created and pushed **only on the `master` branch`.**
+
+A **matrix strategy** is used to build all services in parallel:
+
+```yaml
+matrix:
+  include:
+    - service: auth
+      context: ./auth-api
+      dockerfile: ./auth-api/Dockerfile
+    - service: users
+      context: ./users-api
+      dockerfile: ./users-api/Dockerfile
+    - service: tasks
+      context: ./tasks-api
+      dockerfile: ./tasks-api/Dockerfile
+    - service: frontend
+      context: ./frontend
+      dockerfile: ./frontend/Dockerfile
+```
+
+### What the Matrix Does
+
+- Selects the correct directory for each microservice  
+- Applies the correct Dockerfile  
+- Builds all images **in parallel**  
+- Pushes them to Docker Hub:
+
+```
+aleksandromilenkov/kub-demo-<service>
+```
+
+Images get:
+
+- A `latest` tag  
+- A SHA-based tag for traceability  
+
+---
+
+## ☸️ 4️⃣ Deploy to Minikube (Develop branch only)
+
+When pushing to the `develop` branch, the pipeline:
+
+1. Boots a Minikube cluster  
+2. Enables the Kubernetes Ingress addon  
+3. Applies your Kubernetes manifests  
+4. Waits for pods to become ready  
+5. Performs smoke tests:
+   - Ensures frontend is reachable  
+   - Outputs cluster state  
+
+This gives you a full Kubernetes environment inside GitHub Actions for automatic integration testing.
+
+---
+
+## 🧪 Summary of Pipeline
+
+| Stage | Purpose | Trigger |
+|-------|---------|---------|
+| Frontend Build | Builds React + tests | master, develop, PR |
+| Auth Build | Installs + tests | master, develop, PR |
+| Users Build | Installs + tests | master, develop, PR |
+| Tasks Build | Installs + tests | master, develop, PR |
+| Docker Build & Push | Builds + pushes all images | master only |
+| Deploy to Minikube | Full k8s test deployment | develop only |
+
+---
+
+## 🎉 Result
+
+With this CI/CD pipeline:
+
+- Frontend + backend always compile  
+- Docker images are automatically published  
+- Production images only come from the `master` branch  
+- Kubernetes test deployments run automatically  
+- Microservices build in parallel for faster pipelines  
+
+
 
 ## 📄 License
 
