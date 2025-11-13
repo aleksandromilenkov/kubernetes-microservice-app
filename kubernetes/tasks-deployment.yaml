@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tasks-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tasks
+  template:
+    metadata:
+      labels:
+        app: tasks
+    spec:
+      containers:
+        - name: tasks
+          image: aleksandromilenkov/kub-demo-tasks:latest
+          imagePullPolicy: Always 
+          ports:
+            - containerPort: 8000
+          env:
+            - name: TASKS_FOLDER
+              value: tasks
+            - name: AUTH_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: AUTH_SERVICE_URL
