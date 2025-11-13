@@ -120,12 +120,16 @@ jobs:
         include:
           - service: auth
             context: ./auth-api
+            dockerfile: ./auth-api/Dockerfile
           - service: users
             context: ./users-api
+            dockerfile: ./users-api/Dockerfile
           - service: tasks
             context: ./tasks-api
+            dockerfile: ./tasks-api/Dockerfile
           - service: frontend
             context: ./frontend
+            dockerfile: ./frontend/Dockerfile
     
     steps:
     - name: Checkout code
@@ -152,23 +156,13 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
-        context: ./${{ matrix.service }}-api
-        file: ./${{ matrix.service }}-api/Dockerfile
+        context: ${{ matrix.context }}
+        file: ${{ matrix.dockerfile }}
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/kub-demo-${{ matrix.service }}:buildcache
         cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/kub-demo-${{ matrix.service }}:buildcache,mode=max
-    
-    - name: Build and push Frontend image (special case)
-      if: matrix.service == 'frontend'
-      uses: docker/build-push-action@v4
-      with:
-        context: ./frontend
-        file: ./frontend/Dockerfile
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
 
   # Job 6: Deploy to Minikube (optional - for testing)
   deploy-test:
