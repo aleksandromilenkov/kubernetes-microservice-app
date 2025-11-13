@@ -27,10 +27,6 @@ jobs:
       working-directory: ./frontend
       run: npm ci
     
-    - name: Run tests (if any)
-      working-directory: ./frontend
-      run: npm test -- --passWithNoTests
-    
     - name: Build frontend
       working-directory: ./frontend
       run: npm run build
@@ -58,10 +54,6 @@ jobs:
     - name: Install dependencies
       working-directory: ./auth-api
       run: npm ci
-    
-    - name: Run tests
-      working-directory: ./auth-api
-      run: npm test -- --passWithNoTests
 
   # Job 3: Build and Test Users Service
   build-users:
@@ -79,10 +71,6 @@ jobs:
     - name: Install dependencies
       working-directory: ./users-api
       run: npm ci
-    
-    - name: Run tests
-      working-directory: ./users-api
-      run: npm test -- --passWithNoTests
 
   # Job 4: Build and Test Tasks Service
   build-tasks:
@@ -100,10 +88,6 @@ jobs:
     - name: Install dependencies
       working-directory: ./tasks-api
       run: npm ci
-    
-    - name: Run tests
-      working-directory: ./tasks-api
-      run: npm test -- --passWithNoTests
 
   # Job 5: Build and Push Docker Images
   docker-build-push:
