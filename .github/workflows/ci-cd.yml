@@ -21,11 +21,16 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '18'
+        node-version: '16'
     
     - name: Install dependencies
       working-directory: ./frontend
       run: npm ci
+
+    - name: Run tests (if any)
+      working-directory: ./frontend
+      run: npm test -- --passWithNoTests
+      continue-on-error: true
     
     - name: Build frontend
       working-directory: ./frontend
@@ -50,11 +55,16 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-    
+
     - name: Install dependencies
       working-directory: ./auth-api
       run: npm ci
 
+    - name: Run tests (if any)
+      working-directory: ./frontend
+      run: npm test -- --passWithNoTests
+      continue-on-error: true
+      
   # Job 3: Build and Test Users Service
   build-users:
     runs-on: ubuntu-latest
@@ -72,6 +82,11 @@ jobs:
       working-directory: ./users-api
       run: npm ci
 
+    - name: Run tests (if any)
+      working-directory: ./frontend
+      run: npm test -- --passWithNoTests
+      continue-on-error: true
+
   # Job 4: Build and Test Tasks Service
   build-tasks:
     runs-on: ubuntu-latest
@@ -88,6 +103,11 @@ jobs:
     - name: Install dependencies
       working-directory: ./tasks-api
       run: npm ci
+
+    - name: Run tests (if any)
+      working-directory: ./frontend
+      run: npm test -- --passWithNoTests
+      continue-on-error: true
 
   # Job 5: Build and Push Docker Images
   docker-build-push:
