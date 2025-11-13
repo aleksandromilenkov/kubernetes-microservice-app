@@ -22,8 +22,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
     
     - name: Install dependencies
       working-directory: ./frontend
@@ -56,8 +54,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: auth-api/package-lock.json
     
     - name: Install dependencies
       working-directory: ./auth-api
@@ -79,8 +75,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: users-api/package-lock.json
     
     - name: Install dependencies
       working-directory: ./users-api
@@ -102,8 +96,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: tasks-api/package-lock.json
     
     - name: Install dependencies
       working-directory: ./tasks-api
@@ -121,7 +113,15 @@ jobs:
     
     strategy:
       matrix:
-        service: [auth, users, tasks, frontend]
+        include:
+          - service: auth
+            context: ./auth-api
+          - service: users
+            context: ./users-api
+          - service: tasks
+            context: ./tasks-api
+          - service: frontend
+            context: ./frontend
     
     steps:
     - name: Checkout code
@@ -174,15 +174,23 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
     
-    - name: Install kubeval
+    - name: Validate Kubernetes manifests with kubectl dry-run
       run: |
-        wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
-        tar xf kubeval-linux-amd64.tar.gz
-        sudo mv kubeval /usr/local/bin
-    
-    - name: Validate Kubernetes manifests
+        echo "Validating Kubernetes manifests..."
+        for file in kubernetes/*.yaml; do
+          echo "Checking $file"
+          kubectl apply --dry-run=client -f "$file" || exit 1
+        done
+        echo "All manifests are valid!"
+
+    - name: Install kubeconform
       run: |
-        kubeval --strict kubernetes/*.yaml
+        curl -L https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+        sudo mv kubeconform /usr/local/bin
+
+    - name: Validate with kubeconform
+      run: |
+        kubeconform -summary kubernetes/*.yaml
 
   # Job 7: Deploy to Minikube (optional - for testing)
   deploy-test:
