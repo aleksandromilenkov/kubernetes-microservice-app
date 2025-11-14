@@ -181,7 +181,13 @@ jobs:
     
     - name: Enable ingress addon
       run: minikube addons enable ingress
-    
+
+    - name: Create Kubernetes secret
+      run: |
+        kubectl create secret generic app-secret \
+          --from-literal=DUMMY_SECRET="${{ secrets.DUMMY_SECRET }}" \
+          --dry-run=client -o yaml | kubectl apply -f -
+        
     - name: Deploy to Minikube
       run: |
         kubectl apply -f kubernetes/configmap.yaml

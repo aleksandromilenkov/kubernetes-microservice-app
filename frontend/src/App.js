@@ -24,6 +24,7 @@ function App() {
   useEffect(
     function () {
       fetchTasks();
+      console.log("The secret is:", process.env.REACT_APP_DUMMY_SECRET);
     },
     [fetchTasks]
   );
