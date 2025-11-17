@@ -1,0 +1,35 @@
+replicas:
+  auth: 1
+  users: 1
+  tasks: 1
+  frontend: 1
+
+images:
+  auth: aleksandromilenkov/kub-demo-auth:latest
+  users: aleksandromilenkov/kub-demo-users:latest
+  tasks: aleksandromilenkov/kub-demo-tasks:latest
+  frontend: aleksandromilenkov/kub-demo-frontend:latest
+
+services:
+  auth:
+    port: 80
+  users:
+    port: 8080
+  tasks:
+    port: 8000
+  frontend:
+    port: 80
+
+ingress:
+  host: "myapp.local"
+
+config:
+  AUTH_SERVICE_URL: "http://auth-service"
+  USER_SERVICE_URL: "http://user-service:8080"
+  TASKS_SERVICE_URL: "http://tasks-service:8000"
+  EXTERNAL_AUTH_URL: "http://myapp.local/auth"
+  EXTERNAL_USER_URL: "http://myapp.local/users"
+  EXTERNAL_TASKS_URL: "http://myapp.local/tasks"
+
+secret:
+  DUMMY_SECRET: "some dummy fake secret"

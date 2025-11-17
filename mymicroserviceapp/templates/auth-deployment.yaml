@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-deployment
+  name: {{ .Release.Name }}-auth
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas.auth }}
   selector:
     matchLabels:
       app: auth
@@ -14,4 +14,4 @@ spec:
     spec:
       containers:
         - name: auth
-          image: aleksandromilenkov/kub-demo-auth:latest
+          image: {{ .Values.images.auth }}

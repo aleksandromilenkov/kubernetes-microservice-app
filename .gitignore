@@ -1,2 +1,5 @@
 **/node_modules/
 **/secret.yaml
+**/app-secret.yaml
+**/values-prod.yaml
+**/secrets.env

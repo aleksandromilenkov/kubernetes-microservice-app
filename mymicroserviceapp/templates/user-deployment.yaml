@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-deployment
+  name: {{ .Release.Name }}-users
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas.users }}
   selector:
     matchLabels:
       app: users
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: users
-          image: aleksandromilenkov/kub-demo-users:latest
+          image: {{ .Values.images.users }}
           ports:
             - containerPort: 8080
           envFrom:

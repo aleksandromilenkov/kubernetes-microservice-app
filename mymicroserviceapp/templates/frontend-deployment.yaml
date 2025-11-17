@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend-deployment
+  name: {{ .Release.Name }}-frontend
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas.frontend }}
   selector:
     matchLabels:
       app: frontend
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: aleksandromilenkov/kub-demo-frontend:latest
+        image: {{ .Values.images.frontend }}
         imagePullPolicy: Always
         ports:
           - containerPort: 80

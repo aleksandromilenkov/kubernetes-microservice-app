@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tasks-deployment
+  name: {{ .Release.Name }}-tasks
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicas.tasks }}
   selector:
     matchLabels:
       app: tasks
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: tasks
-          image: aleksandromilenkov/kub-demo-tasks:latest
+          image: {{ .Values.images.tasks }}
           imagePullPolicy: Always 
           ports:
             - containerPort: 8000

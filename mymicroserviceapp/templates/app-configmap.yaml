@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  AUTH_SERVICE_URL: {{ .Values.config.AUTH_SERVICE_URL | quote }}
+  USER_SERVICE_URL: {{ .Values.config.USER_SERVICE_URL | quote }}
+  TASKS_SERVICE_URL: {{ .Values.config.TASKS_SERVICE_URL | quote }}
+  EXTERNAL_AUTH_URL: {{ .Values.config.EXTERNAL_AUTH_URL | quote }}
+  EXTERNAL_USER_URL: {{ .Values.config.EXTERNAL_USER_URL | quote }}
+  EXTERNAL_TASKS_URL: {{ .Values.config.EXTERNAL_TASKS_URL | quote }}

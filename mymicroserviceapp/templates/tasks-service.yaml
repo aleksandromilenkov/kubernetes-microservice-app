@@ -8,5 +8,5 @@ spec:
   type: NodePort
   ports:
     - protocol: TCP
-      port: 8000
-      targetPort: 8000
+      port: {{ .Values.services.tasks.port }}
+      targetPort: {{ .Values.services.tasks.port }}
