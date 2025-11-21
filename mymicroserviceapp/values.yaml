@@ -7,7 +7,7 @@ replicas:
 images:
   auth: aleksandromilenkov/kub-demo-auth:v0.0.1
   users: aleksandromilenkov/kub-demo-users:v0.0.1
-  tasks: aleksandromilenkov/kub-demo-tasks:v0.0.1
+  tasks: aleksandromilenkov/kub-demo-tasks:v1.0.1763747116
   frontend: aleksandromilenkov/kub-demo-frontend:v0.0.1
 
 services:
