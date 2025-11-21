@@ -107,7 +107,7 @@ jobs:
     - name: Update Helm values.yaml
       run: |
         chmod +x scripts/update_values.sh
-        ./scripts/update_values.sh "${{ matrix.service }}" "${{ steps.version.outputs.version }}"
+        ./scripts/update_values_yaml.sh "${{ matrix.service }}" "${{ steps.version.outputs.version }}"
 
     - name: Commit updated values.yaml
       run: |
