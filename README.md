@@ -1,7 +1,7 @@
 # Kubernetes Microservices Demo
 
 A simple microservices application demonstrating Kubernetes deployment, service discovery, and ingress routing using a task management system.
-And also CI/CD with Github Actions
+And also CI/CD with Github Actions and Helm
 
 ## 📋 Project Overview
 
@@ -51,6 +51,7 @@ This project consists of three microservices (auth, users, tasks) and a React fr
 - **Minikube** - Local Kubernetes cluster
 - **Docker Hub** - Container registry
 - **Nginx Ingress Controller** - Traffic routing and load balancing
+- **Helm** - Kubernetes package manager
 
 ## 📦 Services
 
@@ -88,6 +89,7 @@ This project consists of three microservices (auth, users, tasks) and a React fr
 - Docker installed
 - Minikube installed
 - kubectl installed
+- Helm installed
 - Docker Hub account (for pushing custom images)
 
 ### Setup Instructions
@@ -125,26 +127,12 @@ docker build -t aleksandromilenkov/kub-demo-frontend:latest .
 docker push aleksandromilenkov/kub-demo-frontend:latest
 ```
 
-4. **Deploy to Kubernetes**
+4. **Deploy With Helm to Kubernetes**
 ```bash
-# Apply ConfigMap
-kubectl apply -f kubernetes/configmap.yaml
-
-# Deploy services
-kubectl apply -f kubernetes/auth-deployment.yaml
-kubectl apply -f kubernetes/auth-service.yaml
-
-kubectl apply -f kubernetes/user-deployment.yaml
-kubectl apply -f kubernetes/user-service.yaml
-
-kubectl apply -f kubernetes/tasks-deployment.yaml
-kubectl apply -f kubernetes/tasks-service.yaml
-
-kubectl apply -f kubernetes/frontend-deployment.yaml
-kubectl apply -f kubernetes/frontend-service.yaml
-
-# Deploy Ingress
-kubectl apply -f kubernetes/ingress.yaml
+# Install or upgrade the release
+helm upgrade --install myapp ./mymicroserviceapp \
+  -f values.yaml \
+  -f values-prod.yaml
 ```
 
 5. **Configure Local DNS**
@@ -166,11 +154,15 @@ http://myapp.local
 
 ## 🔧 Configuration
 
-### ConfigMap
-The `configmap.yaml` stores service URLs for inter-service communication:
-- `AUTH_SERVICE_URL`: Internal auth service URL
-- `USER_SERVICE_URL`: Internal user service URL  
-- `TASKS_SERVICE_URL`: Internal task service URL
+### ConfigMap & Secrets
+Use configmap.yaml for service URLs.  
+Use Helm + values-prod.yaml or GitHub Secrets for sensitive values.  
+Example in CI/CD:  
+```bash
+helm upgrade --install myapp ./mymicroserviceapp \
+  -f values.yaml \
+  --set secret.DUMMY_SECRET="${{ secrets.DUMMY_SECRET }}"
+```
 
 ### Ingress Routing
 
@@ -207,6 +199,9 @@ The ingress uses path-based routing with rewrite rules:
 
 ### ConfigMaps
 - `app-config` - Service URLs and environment variables
+
+### Secrets
+- `app-secret` - DUMMY_SECRET injected via Helm or GitHub Secrets
 
 ### Ingress
 - `app-ingress` - Nginx ingress with path-based routing
@@ -270,7 +265,7 @@ It performs:
 - Building the React frontend  
 - Packaging all services into Docker images  
 - Pushing images to Docker Hub  
-- (Optional) Deploying to Minikube for testing  
+- Deploys Helm chart to Minikube for testing  
 
 ---
 
@@ -373,13 +368,13 @@ Images get:
 
 ---
 
-## ☸️ 4️⃣ Deploy to Minikube (Develop branch only)
+## ☸️ 4️⃣ Deploy Helm Chart to Minikube (Develop branch only)
 
 When pushing to the `develop` branch, the pipeline:
 
 1. Boots a Minikube cluster  
 2. Enables the Kubernetes Ingress addon  
-3. Applies your Kubernetes manifests  
+3. Applies the Helm chart to Kubernetes(Minikube)  
 4. Waits for pods to become ready  
 5. Performs smoke tests:
    - Ensures frontend is reachable  
@@ -398,7 +393,7 @@ This gives you a full Kubernetes environment inside GitHub Actions for automatic
 | Users Build | Installs + tests | master, develop, PR |
 | Tasks Build | Installs + tests | master, develop, PR |
 | Docker Build & Push | Builds + pushes all images | master only |
-| Deploy to Minikube | Full k8s test deployment | develop only |
+| Deploy to Minikube With Helm | Full k8s test deployment | develop only |
 
 ---
 
