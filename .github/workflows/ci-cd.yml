@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline (ArgoCD GitOps)
 
 on:
   push:
@@ -10,107 +10,56 @@ env:
   DOCKER_USERNAME: aleksandromilenkov
 
 jobs:
-  # Job 1: Build and Test Frontend
   build-frontend:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
-    
-    - name: Install dependencies
-      working-directory: ./frontend
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with: { node-version: '16' }
+    - working-directory: ./frontend
       run: npm ci
-
-    - name: Run tests (if any)
-      working-directory: ./frontend
-      run: npm test -- --passWithNoTests
-      continue-on-error: true
-    
-    - name: Build frontend
-      working-directory: ./frontend
+    - working-directory: ./frontend
+      run: npm test -- --passWithNoTests || true
+    - working-directory: ./frontend
       run: npm run build
-    
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: frontend-build
-        path: frontend/build
-        retention-days: 1
 
-  # Job 2: Build and Test Auth Service
   build-auth:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-
-    - name: Install dependencies
-      working-directory: ./auth-api
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with: { node-version: '18' }
+    - working-directory: ./auth-api
       run: npm ci
+    - working-directory: ./auth-api
+      run: npm test -- --passWithNoTests || true
 
-    - name: Run tests (if any)
-      working-directory: ./auth-api
-      run: npm test -- --passWithNoTests
-      continue-on-error: true
-      
-  # Job 3: Build and Test Users Service
   build-users:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-    
-    - name: Install dependencies
-      working-directory: ./users-api
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with: { node-version: '18' }
+    - working-directory: ./users-api
       run: npm ci
+    - working-directory: ./users-api
+      run: npm test -- --passWithNoTests || true
 
-    - name: Run tests (if any)
-      working-directory: ./users-api
-      run: npm test -- --passWithNoTests
-      continue-on-error: true
-
-  # Job 4: Build and Test Tasks Service
   build-tasks:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-    
-    - name: Install dependencies
-      working-directory: ./tasks-api
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with: { node-version: '18' }
+    - working-directory: ./tasks-api
       run: npm ci
-
-    - name: Run tests (if any)
-      working-directory: ./tasks-api
-      run: npm test -- --passWithNoTests
-      continue-on-error: true
-
-  # Job 5: Build and Push Docker Images
+    - working-directory: ./tasks-api
+      run: npm test -- --passWithNoTests || true
+  ## job for updating the docker images and pushing to docker hub and updating values.yaml
   docker-build-push:
     runs-on: ubuntu-latest
     needs: [build-frontend, build-auth, build-users, build-tasks]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
+    if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
         include:
@@ -126,83 +75,45 @@ jobs:
           - service: frontend
             context: ./frontend
             dockerfile: ./frontend/Dockerfile
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
+
+    - name: Install git (needed for commits)
+      run: sudo apt-get install -y git
+
+    - name: Generate semantic version
+      id: version
+      run: |
+        VERSION="v1.0.$(date +%s)"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ env.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: ${{ env.DOCKER_USERNAME }}/kub-demo-${{ matrix.service }}
-        tags: |
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
+
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
       with:
         context: ${{ matrix.context }}
         file: ${{ matrix.dockerfile }}
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/kub-demo-${{ matrix.service }}:buildcache
-        cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/kub-demo-${{ matrix.service }}:buildcache,mode=max
+        tags: |
+          ${{ env.DOCKER_USERNAME }}/kub-demo-${{ matrix.service }}:${{ steps.version.outputs.version }}
 
-  # Job 6: Deploy to Minikube with Helm
-  deploy-test:
-    runs-on: ubuntu-latest
-    needs: [docker-build-push]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Install Helm
+    - name: Update Helm values.yaml
       run: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        chmod +x scripts/update_values.sh
+        ./scripts/update_values.sh "${{ matrix.service }}" "${{ steps.version.outputs.version }}"
 
-    - name: Start Minikube
-      uses: medyagh/setup-minikube@latest
-      with:
-        kubernetes-version: '1.28'
-
-    - name: Enable ingress addon
-      run: minikube addons enable ingress
-
-    - name: Deploy Helm chart
+    - name: Commit updated values.yaml
       run: |
-        helm upgrade --install myapp ./mymicroserviceapp \
-          -f values.yaml \
-          --set secret.DUMMY_SECRET="${{ secrets.DUMMY_SECRET }}" \
-          --wait --timeout 300s
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add mymicroserviceapp/values.yaml
+        git commit -m "Update image tags to ${{ steps.version.outputs.version }} [skip ci]"
+        git push origin master
 
-    - name: Test deployment
-      run: |
-        kubectl get all
-        kubectl get ingress
-
-    - name: Run smoke tests
-      run: |
-        # Wait for ingress to be ready
-        sleep 30
-        
-        # Get Minikube IP
-        MINIKUBE_IP=$(minikube ip)
-        
-        # Test frontend
-        curl -f http://$MINIKUBE_IP/ || exit 1
-        
-        echo "Smoke tests passed!"
