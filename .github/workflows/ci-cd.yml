@@ -13,6 +13,9 @@ env:
   DOCKER_USERNAME: aleksandromilenkov
 
 jobs:
+  # ---------------------------------------------------------
+  # Build Jobs (run in parallel)
+  # ---------------------------------------------------------
   build-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -58,11 +61,15 @@ jobs:
       run: npm ci
     - working-directory: ./tasks-api
       run: npm test -- --passWithNoTests || true
-  ## job for updating the docker images and pushing to docker hub and updating values.yaml
+
+  # ---------------------------------------------------------
+  # Build & Push Docker Images (parallel matrix)
+  # ---------------------------------------------------------
   docker-build-push:
     runs-on: ubuntu-latest
-    needs: [build-frontend, build-auth, build-users, build-tasks]
     if: github.ref == 'refs/heads/master'
+    needs: [build-frontend, build-auth, build-users, build-tasks]
+
     strategy:
       matrix:
         include:
@@ -79,12 +86,11 @@ jobs:
             context: ./frontend
             dockerfile: ./frontend/Dockerfile
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
-    - name: Install git (needed for commits)
-      run: sudo apt-get install -y git
+    steps:
+    - uses: actions/checkout@v3
 
     - name: Generate semantic version
       id: version
@@ -98,29 +104,54 @@ jobs:
         username: ${{ env.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build and push Docker image
+    - name: Build & push Docker image
       uses: docker/build-push-action@v4
       with:
         context: ${{ matrix.context }}
         file: ${{ matrix.dockerfile }}
         push: true
-        tags: |
-          ${{ env.DOCKER_USERNAME }}/kub-demo-${{ matrix.service }}:${{ steps.version.outputs.version }}
+        tags: ${{ env.DOCKER_USERNAME }}/kub-demo-${{ matrix.service }}:${{ steps.version.outputs.version }}
 
-    - name: Update Helm values.yaml
+    - name: Save artifact of version + service
+      run: |
+        echo "${{ matrix.service }}=${{ steps.version.outputs.version }}" >> image_versions.txt
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: image-versions
+        path: image_versions.txt
+
+  # ---------------------------------------------------------
+  # Update Helm values.yaml (only once)
+  # ---------------------------------------------------------
+  update-helm:
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: image-versions
+        path: versions
+
+    - name: List versions
+      run: cat versions/image_versions.txt
+
+    - name: Update all image tags in values.yaml
       run: |
         chmod +x scripts/update_values_yaml.sh
-        ./scripts/update_values_yaml.sh "${{ matrix.service }}" "${{ steps.version.outputs.version }}"
-    
-    - name: Pull latest changes
-      run: |
-        git pull --rebase origin master
+        while IFS= read -r line; do
+          SERVICE=$(echo "$line" | cut -d '=' -f 1)
+          VERSION=$(echo "$line" | cut -d '=' -f 2)
+          ./scripts/update_values_yaml.sh "$SERVICE" "$VERSION"
+        done < versions/image_versions.txt
 
-    - name: Commit updated values.yaml
+    - name: Commit & push changes
       run: |
         git config user.name "github-actions"
         git config user.email "actions@github.com"
         git add mymicroserviceapp/values.yaml
-        git commit -m "Update image tags to ${{ steps.version.outputs.version }} [skip ci]"
+        git commit -m "Update image tags to version ${{ needs.docker-build-push.outputs.version }} [skip ci]" || echo "No changes"
         git push origin master
-
