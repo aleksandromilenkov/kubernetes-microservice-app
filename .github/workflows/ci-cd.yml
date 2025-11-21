@@ -1,5 +1,8 @@
 name: CI/CD Pipeline (ArgoCD GitOps)
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ master, develop ]
