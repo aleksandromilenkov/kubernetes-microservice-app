@@ -19,8 +19,8 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with: { node-version: '16' }
     - working-directory: ./frontend
       run: npm ci
@@ -32,8 +32,8 @@ jobs:
   build-auth:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with: { node-version: '18' }
     - working-directory: ./auth-api
       run: npm ci
@@ -43,8 +43,8 @@ jobs:
   build-users:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with: { node-version: '18' }
     - working-directory: ./users-api
       run: npm ci
@@ -54,8 +54,8 @@ jobs:
   build-tasks:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
       with: { node-version: '18' }
     - working-directory: ./tasks-api
       run: npm ci
@@ -90,7 +90,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Generate semantic version
       id: version
@@ -116,7 +116,7 @@ jobs:
       run: |
         echo "${{ matrix.service }}=${{ steps.version.outputs.version }}" >> image_versions.txt
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: image-versions
         path: image_versions.txt
@@ -129,9 +129,9 @@ jobs:
     needs: docker-build-push
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: image-versions
         path: versions
