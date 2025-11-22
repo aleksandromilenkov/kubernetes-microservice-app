@@ -31,8 +31,8 @@ spec:
                 name: tasks-service
                 port:
                   number: {{ .Values.services.tasks.port }}
-          - path: /()(.*)
-            pathType: ImplementationSpecific
+          - path: /(.*)
+            pathType: Prefix
             backend:
               service:
                 name: frontend-service
