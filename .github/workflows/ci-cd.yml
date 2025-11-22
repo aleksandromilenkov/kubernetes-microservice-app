@@ -118,7 +118,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: image-versions
+        name: image-versions-${{ matrix.service }}
         path: image_versions.txt
 
   # ---------------------------------------------------------
@@ -133,11 +133,12 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: image-versions
         path: versions
 
-    - name: List versions
-      run: cat versions/image_versions.txt
+    - name: Merge all version files
+      run: |
+        cat versions/**/image_versions.txt > versions/all_versions.txt
+        cat versions/all_versions.txt
 
     - name: Update all image tags in values.yaml
       run: |
@@ -146,7 +147,7 @@ jobs:
           SERVICE=$(echo "$line" | cut -d '=' -f 1)
           VERSION=$(echo "$line" | cut -d '=' -f 2)
           ./scripts/update_values_yaml.sh "$SERVICE" "$VERSION"
-        done < versions/image_versions.txt
+        done < versions/all_versions.txt
 
     - name: Commit & push changes
       run: |
