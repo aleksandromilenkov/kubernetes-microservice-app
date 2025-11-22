@@ -1,11 +1,17 @@
 # Kubernetes Microservices Demo
 
-A simple microservices application demonstrating Kubernetes deployment, service discovery, and ingress routing using a task management system.
-And also CI/CD with Github Actions and Helm
+A simple microservices application demonstrating Kubernetes deployment, service discovery, ingress routing, and CI/CD using GitHub Actions, Helm, and **Argo CD GitOps**.  
+
+The project includes a task management system with three backend microservices and a React frontend.
+
+---
 
 ## 📋 Project Overview
 
-This project consists of three microservices (auth, users, tasks) and a React frontend, all deployed on Kubernetes using Minikube. The application allows users to create and view tasks, with authentication handled by a separate auth service.
+This project consists of three microservices (`auth`, `users`, `tasks`) and a React frontend, all deployed on Kubernetes. The application allows users to create and view tasks, with authentication handled by the `auth` service.  
+
+All deployments are managed via **Helm charts**, and continuous delivery to Kubernetes is automated through **Argo CD GitOps**.
+
 
 ## 🏗️ Architecture
 
@@ -52,6 +58,7 @@ This project consists of three microservices (auth, users, tasks) and a React fr
 - **Docker Hub** - Container registry
 - **Nginx Ingress Controller** - Traffic routing and load balancing
 - **Helm** - Kubernetes package manager
+- **Argo CD** - GitOps continuous deployment for Kubernetes
 
 ## 📦 Services
 
@@ -91,6 +98,7 @@ This project consists of three microservices (auth, users, tasks) and a React fr
 - kubectl installed
 - Helm installed
 - Docker Hub account (for pushing custom images)
+- Argo CD installed (optional for GitOps deployment)
 
 ### Setup Instructions
 
@@ -265,7 +273,8 @@ It performs:
 - Building the React frontend  
 - Packaging all services into Docker images  
 - Pushing images to Docker Hub  
-- Deploys Helm chart to Minikube for testing  
+- Deploys Helm chart to Minikube for testing
+- Automatically deploying the Helm chart via Argo CD
 
 ---
 
@@ -368,19 +377,13 @@ Images get:
 
 ---
 
-## ☸️ 4️⃣ Deploy Helm Chart to Minikube (Develop branch only)
+## ☸️ 4️⃣ Helm Chart Update & Argo CD Deployment
 
 When pushing to the `develop` branch, the pipeline:
 
-1. Boots a Minikube cluster  
-2. Enables the Kubernetes Ingress addon  
-3. Applies the Helm chart to Kubernetes(Minikube)  
-4. Waits for pods to become ready  
-5. Performs smoke tests:
-   - Ensures frontend is reachable  
-   - Outputs cluster state  
-
-This gives you a full Kubernetes environment inside GitHub Actions for automatic integration testing.
+1. Updates values.yaml with new image tags  
+2. Commits changes to GitHub  
+3. Argo CD detects the changes and deploys updated images to Kubernetes  
 
 ---
 
@@ -393,7 +396,7 @@ This gives you a full Kubernetes environment inside GitHub Actions for automatic
 | Users Build | Installs + tests | master, develop, PR |
 | Tasks Build | Installs + tests | master, develop, PR |
 | Docker Build & Push | Builds + pushes all images | master only |
-| Deploy to Minikube With Helm | Full k8s test deployment | develop only |
+| Helm + Argo CD Deployment | Updates chart & deploys | commit to master (auto sync via Argo CD) |
 
 ---
 
@@ -404,7 +407,7 @@ With this CI/CD pipeline:
 - Frontend + backend always compile  
 - Docker images are automatically published  
 - Production images only come from the `master` branch  
-- Kubernetes test deployments run automatically  
+- Kubernetes deployments are automatically updated via Argo CD  
 - Microservices build in parallel for faster pipelines  
 
 
@@ -426,3 +429,5 @@ This project demonstrates basic Kubernetes concepts including:
 - ConfigMaps
 - Container orchestration
 - Inter-service communication
+- CI/CD with GitHub Actions
+- Helm + Argo CD GitOp
