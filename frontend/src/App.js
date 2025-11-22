@@ -51,7 +51,7 @@ function App() {
   return (
     <div className='App'>
       <section>
-        <h1>Task Manager!!</h1>
+        <h1>Task Manager!!!</h1>
       </section>
       <section>
         <NewTask onAddTask={addTaskHandler} />
