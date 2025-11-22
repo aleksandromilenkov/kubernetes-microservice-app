@@ -2,7 +2,8 @@
 
 A simple microservices application demonstrating Kubernetes deployment, service discovery, ingress routing, and CI/CD using GitHub Actions, Helm, and **Argo CD GitOps**.  
 
-The project includes a task management system with three backend microservices and a React frontend.
+The project includes a task management system with three backend microservices and a React frontend.  
+<img width="873" height="864" alt="image" src="https://github.com/user-attachments/assets/67a3f716-f1f4-43b2-a1f8-3024e5f7df50" />
 
 ---
 
