@@ -4,7 +4,7 @@ A simple microservices application demonstrating Kubernetes deployment, service 
 
 The project includes a task management system with three backend microservices and a React frontend.  
 
-<img width="550" height="550" alt="image" src="https://github.com/user-attachments/assets/571d21ab-a6a7-48ee-aa0a-464cb69c7038" />
+<img width="550" height="550" alt="image" src="https://github.com/user-attachments/assets/571d21ab-a6a7-48ee-aa0a-464cb69c7038" />  
 <i> Screenshot from my ArgoCD's UI</i>
 
 ---
