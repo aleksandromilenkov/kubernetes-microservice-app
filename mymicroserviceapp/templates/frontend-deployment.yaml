@@ -4,6 +4,11 @@ metadata:
   name: {{ .Release.Name }}-frontend
 spec:
   replicas: {{ .Values.replicas.frontend }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: frontend
