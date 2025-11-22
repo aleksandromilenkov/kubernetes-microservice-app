@@ -5,10 +5,10 @@ replicas:
   frontend: 1
 
 images:
-  auth: aleksandromilenkov/kub-demo-auth:v1.0.1763829640
-  users: aleksandromilenkov/kub-demo-users:v1.0.1763829640
-  tasks: aleksandromilenkov/kub-demo-tasks:v1.0.1763829640
-  frontend: aleksandromilenkov/kub-demo-frontend:v1.0.1763829640
+  auth: aleksandromilenkov/kub-demo-auth:v1.0.1763830829
+  users: aleksandromilenkov/kub-demo-users:v1.0.1763830830
+  tasks: aleksandromilenkov/kub-demo-tasks:v1.0.1763830829
+  frontend: aleksandromilenkov/kub-demo-frontend:v1.0.1763830829
 
 services:
   auth:
