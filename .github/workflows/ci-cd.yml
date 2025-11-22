@@ -149,6 +149,12 @@ jobs:
           ./scripts/update_values_yaml.sh "$SERVICE" "$VERSION"
         done < versions/all_versions.txt
 
+    - name: Wait for all images to be available
+      run: |
+        # optional: simple wait loop checking dockerhub API for your frontend image
+        sleep 30
+
+
     - name: Commit & push changes
       run: |
         git config user.name "github-actions"
